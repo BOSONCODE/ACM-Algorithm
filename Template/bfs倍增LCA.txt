@@ -1,0 +1,32 @@
+#define N 10050  
+struct Edge{    
+    int from, to, dis, nex;    
+}edge[5*N];    
+int head[N],edgenum,dis[N],fa[N][20],dep[N];  //fa[i][x] 是i的第2^x个父亲（如果超过范围就是根）  
+void add(int u,int v,int w){    
+    Edge E={u,v,w,head[u]};  
+    edge[edgenum] = E;  
+    head[u]=edgenum++;    
+}  
+void bfs(int root){    
+    queue<int> q;    
+    fa[root][0]=root;dep[root]=0;dis[root]=0;    
+    q.push(root);    
+    while(!q.empty()){    
+        int u=q.front();q.pop();    
+        for(int i=1;i<20;i++)fa[u][i]=fa[fa[u][i-1]][i-1];    
+        for(int i=head[u]; ~i;i=edge[i].nex){    
+            int v=edge[i].to;if(v==fa[u][0])continue;    
+            dep[v]=dep[u]+1;dis[v]=dis[u]+edge[i].dis;fa[v][0]=u;    
+            q.push(v);  
+        }    
+    }    
+}    
+int Lca(int x,int y){    
+    if(dep[x]<dep[y])swap(x,y);    
+    for(int i=0;i<20;i++)if((dep[x]-dep[y])&(1<<i))x=fa[x][i];    
+    if(x==y)return x;    
+    for(int i=19;i>=0;i--)if(fa[x][i]!=fa[y][i])x=fa[x][i],y=fa[y][i];    
+    return fa[x][0];  
+}    
+void init(){memset(head, -1, sizeof head); edgenum = 0;} 

@@ -1,0 +1,100 @@
+package ccf;
+
+import java.io.*;
+import java.lang.reflect.Array;
+import java.math.*;
+import java.util.*;
+
+class InputReader {
+    public BufferedReader reader;
+    public StringTokenizer tokenizer;
+    public InputReader(InputStream stream) {
+        reader = new BufferedReader(new InputStreamReader(stream), 32768);
+        tokenizer = null;
+    }
+    public String next() {
+        while (tokenizer == null || !tokenizer.hasMoreTokens()) {
+            try {
+                tokenizer = new StringTokenizer(reader.readLine());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return tokenizer.nextToken();
+    }
+    public int nextInt() {
+        return Integer.parseInt(next());
+    }
+    public long nextLong(){
+    	return Long.parseLong(next());
+    }
+}
+
+
+public class Main {
+	public final static int maxn = 200;
+	public final static double eps = 1e-6;
+	public static long num[] = new long[100];
+	public static long inf = 1000000000000005000L;
+	public static long INF = 1L << 31;
+	
+	public static long quick_pow(long a, long b){
+		long res = 1;
+		while(b > 0){
+			if((b&1) != 0){
+				double mo = inf*1.0/res;
+				if(a > mo) return -1;
+				res = res*a;	
+			}
+			b >>= 1;
+			if(a > INF && b > 0) return -1;
+			a = a*a;
+		}
+		return res;
+	}
+	
+	public static long find(long n, long x){
+		long b = (long)Math.pow(n*1.0, 1.0/x);
+		long res = quick_pow(b, x);
+		if(res == n) return b;
+		if(res > n || res == -1) return --b;
+		else{
+			long baga = quick_pow(b + 1, x);
+			if(baga > n || baga == -1) return b;
+			return ++b;
+		}
+	}
+	
+	public static long work(long n){
+		int tot = 0;
+		if(n <= 3) return n;
+		for (int i = 0; i < 100; ++i) num[i] = 0;
+		num[1] = n;
+		for (int i = 2; i < 63; ++i){
+			num[i] = find(n, i) - 1;
+			if(num[i] == 0){
+				tot = i;
+				break;
+			}
+		}
+		for (int i = tot - 1; i > 0; --i){
+			for (int j = 1; j < i; ++j){
+				if(i%j == 0) num[j] -= num[i];
+			}
+		}
+		long res = num[1];
+		for (int i = 2; i < tot; ++i){
+			res += i*num[i];
+		}
+		return res;
+	}
+	
+	public static void main(String[] argxtLongs){
+		InputReader cin = new InputReader(System.in);
+		while(true){
+			long a = cin.nextLong(), b = cin.nextLong();
+			if(a == 0 || b == 0) break;
+			System.out.println(work(b) - work(a-1));
+		}
+	}
+}

@@ -1,0 +1,101 @@
+/*************************************************************************
+    > File Name: hdu6053.cpp
+    > Author: BOSON
+    > Mail: suda1527403057@163.com 
+    > Created Time: 2017年07月27日 星期四 21时14分05秒
+ ************************************************************************/
+
+#include <iostream>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <time.h>
+#include <stdlib.h>
+#include <set>
+#include <map>
+#include <algorithm>
+#include <stdio.h>
+#include <stack>
+#include <queue>
+#include <deque>
+#include <climits>
+#include <functional>
+
+using namespace std;
+#define ll long long
+#define mod 1000000007
+#define maxn 100005
+
+int a[maxn];
+int prime[maxn];
+int pnum[maxn];
+bool vis[maxn];
+int sef[maxn];
+int n;
+
+void init(){
+    memset(pnum, 0, sizeof pnum);
+    memset(vis, true, sizeof vis);
+    for (int i = 1; i < maxn; ++i) sef[i] = 1;
+    for (int i = 2; i < maxn; ++i){
+        if(vis[i]){
+            pnum[i]++;
+            sef[i] = i;
+            for (int j = i + i; j < maxn; j += i){
+                sef[j] *= i;
+                pnum[j]++;
+                vis[j] = false;
+            }
+        }
+    }
+}
+
+ll quick_pow(ll a, int b){
+    ll res = 1;
+    while(b){
+        if(b & 1) res = res * a % mod;
+        b >>= 1;
+        a = a*a % mod;
+    }
+    return res;
+}
+
+ll cal(int block){
+    int pos = 1, rpos = 1;
+    ll ans = 1;
+    while(pos <= n){
+        int x = a[pos] / block;
+        int l = pos, r = n; rpos = pos;
+        while(l <= r){
+            int m = l + r >> 1;    
+            if(a[m]/block == x){
+                rpos = m;
+                l = m + 1;
+            }else 
+                r = m - 1;
+        }
+        ans = ans*quick_pow(x, rpos - pos + 1) % mod;
+        pos = rpos + 1;
+    }
+    return ans;
+}
+
+int main(){
+    init();
+    int t; scanf("%d", &t);
+    for (int cas = 1; cas <= t; ++cas){
+        scanf("%d", &n);
+        for (int i = 1; i <= n; ++i) scanf("%d", a + i);
+        sort(a + 1, a + 1 + n);
+        ll ans = 0ll;
+        for (int g = 2; g <= a[1]; ++g){
+            if(sef[g] != g) continue;    
+            ll res = cal(g);
+            if(pnum[g]&1) ans += res;
+            else ans -= res;
+            ans = ((ans % mod) + mod) % mod;
+        }
+        printf("Case #%d: %lld\n", cas, ans);
+    }
+    return 0;
+}

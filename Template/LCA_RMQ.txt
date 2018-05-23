@@ -1,0 +1,81 @@
+#include <bits/stdc++.h>
+using namespace std;
+const int maxn = 6e6 + 5;
+
+struct LCA_ONLINE{
+	struct Edge{
+		int v, nxt, w;
+	}e[maxn];
+	int head[maxn], tot = 0, vis[maxn];
+	int pw[26], dp[maxn][25];
+	void init(int n){
+		for (int i = 0; i <= n; ++i)
+			head[i] = -1, vis[i] = 0;
+		for (int i = 0; i <= 25; ++i)
+			pw[i] = (1 << i);
+		tot = 0;
+	}
+	void addedge(int u, int v, int w){
+		e[tot].v = v;
+		e[tot].nxt = head[u];
+		e[tot].w = w;
+		head[u] = tot++;
+	}
+
+	int dfn[maxn], tim = 0, R[maxn], ver[maxn], dis[maxn];
+	void dfs(int u, int dep = 1){
+		vis[u] = 1; dfn[u] = ++tim; ver[tim] = u, R[tim] = dep;
+		for (int i = head[u]; ~i; i = e[i].nxt){
+			int v = e[i].v, w = e[i].w;
+			if(vis[v]) continue;
+			dis[v] = dis[u] + w;
+			dfs(v, dep + 1);
+			ver[++tim] = u, R[tim] = dep;
+		}
+	}
+	void rmq_init(int len){
+		int k = (int)log((double)len)/log(2.0);
+		for (int i = 1; i <= len; ++i) dp[i][0] = i;
+		for (int j = 1; j <= k; ++j){
+			for (int i = 1; i + pw[j] <= len + 1; ++i){
+				int a = dp[i][j-1], b = dp[i + pw[j-1]][j-1];
+				dp[i][j] = (R[a] < R[b] ? a : b);		
+			}
+		}
+	}
+	int query(int x, int y){
+		//if(x > y) swap(x, y);
+		int k = (int)log((double)(y - x + 1)/log(2.0));
+		int a = dp[x][k], b = dp[y - pw[k] + 1][k];
+		return (R[a] < R[b] ? a : b);
+	}
+	int LCA(int u, int v){
+		int x = dfn[u], y = dfn[v];
+		if(x > y) swap(x, y);
+		int res = query(x, y);
+		return ver[res];
+	}
+}lca;
+
+void work(){
+	int n, m; scanf("%d%d", &n, &m);
+	lca.init(n);
+	for (int i = 1; i < n; ++i){
+		int u, v, w; scanf("%d%d%d", &u, &v, &w);
+		lca.addedge(u, v, w);
+		lca.addedge(v, u, w);
+	}
+	lca.dfs(1);
+	lca.rmq_init(2*n - 1);
+	for (int i = 1; i <= m; ++i){
+		int u, v; scanf("%d%d", &u, &v);
+		int pos = lca.LCA(u, v);
+		printf("%d\n", lca.dis[u] + lca.dis[v] - 2*lca.dis[pos]);
+	}
+}
+
+int main(){
+	int t; scanf("%d", &t);
+	while(t-->0) work();
+	return 0;
+}

@@ -1,0 +1,63 @@
+#define maxn 1005
+int g[maxn][maxn];
+int f[maxn][maxn];
+int path[maxn][maxn];
+int n; 
+
+void init(){
+    for (int i = 0; i <= n; ++i)
+        for (int j = 0; j <= n; ++j)
+            g[i][j] = (i == j ? 0 : (1 << 20)), path[i][j] = j;
+}
+
+void floyd(){
+    for (int k = 1; k <= n; ++k)
+        for (int i = 1; i <= n; ++i)
+            for (int j = 1; j <= n; ++j){
+                if(g[i][j] > g[i][k] + g[k][j]){
+                    g[i][j] = g[i][k] + g[k][j];
+                    path[i][j] = path[i][k];
+                }
+            }
+}
+
+void print(){
+    for (int i = 1; i <= n; ++i)
+        for (int j = 1; j <= n; ++j)
+            printf("%d%c", g[i][j], " \n"[j == n]);
+}
+
+int main(){
+    int m;
+    scanf("%d%d", &n, &m);
+    init();
+    for (int i = 1; i <= m; ++i){
+        int u, v, w;
+        scanf("%d%d%d", &u, &v, &w);
+        g[u][v] = g[v][u] = min(w, g[u][v]);
+    }
+    floyd();
+    int u, v;
+    while(scanf("%d%d",&u,&v))  {//输入起点和终点  
+            int tmp = u;  
+            printf("%d",u);  
+            while(tmp !=v )  {//打印路径  
+                printf("-->%d",path[tmp][v]);  
+                tmp = path[tmp][v];  
+            }  
+            //输出最小花费  
+            printf("\ncost: %d\n", g[u][v]); 
+            //cout<<"cost: " << g[u][v]<<endl;  
+    } 
+    print();
+    return 0;
+}
+
+//Floyd判连通性
+map[x][y] 1表示有边 0表示无边
+void floyd(){
+	for(int k = 1; k <= n; ++k)
+		for(int i = 1; i <= n; ++i)
+			for(int j = 1;j <= n; ++j)
+				map[i][j] = map[i][j] || (map[i][k] && map[k][j]);
+}

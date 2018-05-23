@@ -1,0 +1,64 @@
+const int maxn=1005;
+const int maxm=20005;
+ 
+struct match
+{
+    int un,num,vn;
+    int b[maxn],a[maxm],next[maxm],id[maxm];
+    int d1[maxn],d2[maxn];
+    int linker[maxn];
+    bool used[maxn];
+    void init(int unn,int vnn)
+    {
+        un=unn;vn=vnn;num=0;
+        memset(b,0,sizeof(b));
+        for (int i=0;i<un;++i) d1[i]=0;
+        for (int i=0;i<vn;++i) d2[i]=0;
+    }
+    void addedge(int x,int y)
+    {
+        d1[x]++;d2[y]++;
+        ++num;a[num]=y;next[num]=b[x];b[x]=num;
+    }
+    bool dfs(int x)
+    {
+        vector<pair<int,int> >vv;
+        vv.clear();
+        for (int i=b[x];i>0;i=next[i])
+        {
+            vv.push_back(make_pair(d2[a[i]],a[i]));
+        }
+        sort(vv.begin(),vv.end());
+        reverse(vv.begin(),vv.end());
+        for (int i=0;i<vv.size();++i)
+        {
+            int y=vv[i].second;
+            if (!used[y])
+            {
+                used[y]=true;
+                if (linker[y]==-1||dfs(linker[y]))
+                {
+                    linker[y]=x;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    int hungary()
+    {
+        int ans=0;
+        memset(linker,-1,sizeof(linker));
+        vector<pair<int,int> >v;
+        v.clear();
+        for (int u=0;u<un;++u) v.push_back(make_pair(d1[u],u));
+        sort(v.begin(),v.end());
+        reverse(v.begin(),v.end());
+        for (int u=0;u<un;++u)
+        {
+            memset(used,false,sizeof(used));
+            if (dfs(v[u].second)) ans++;
+        }
+        return ans;
+    }
+}mp;

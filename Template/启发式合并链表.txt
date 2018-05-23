@@ -1,0 +1,73 @@
+//#pragma comment(linker, "/STACK:1024000000,1024000000") 
+//启发式合并
+//BZOJ1483 HNOI2009 梦幻布丁
+//用链表进行维护
+#include <bits/stdc++.h>
+/*#include <iostream>
+#include <string>
+#include <cstring>
+#include <vector>
+#include <ctime>
+#include <cstdlib>
+#include <set>
+#include <map>
+#include <algorithm>
+#include <cstdio>
+#include <stack>
+#include <queue>
+#include <deque>
+#include <climits>
+#include <functional>
+#include <cmath>
+#include <bitset>
+#include <fstream>*/
+using namespace std;
+#define ll long long 
+const int maxn = 2e5 + 100;
+const int N = 1e6 + 10;
+
+int a[maxn];
+int cnt[N];
+int head[N]; //表头
+int nxt[N]; // 前一个元素
+int tail[N]; //尾巴
+// 这是多个从后往前走的链表
+
+int f[N];
+
+int main(){
+	int n, m; scanf("%d%d", &n, &m);
+	memset(cnt, 0, sizeof cnt);
+	memset(tail, 0, sizeof head);
+	memset(nxt, 0, sizeof nxt);
+	int ans = 0, mx = 0; a[0] = 0;
+	for (int i = 1; i <= n; ++i) {
+		scanf("%d", &a[i]); mx = max(mx, a[i]);
+		if(a[i]^a[i-1]) ++ans;
+		if(!tail[a[i]]) head[a[i]] = i;
+		nxt[i] = tail[a[i]];
+		tail[a[i]] = i;
+		cnt[a[i]]++;
+ 	}
+ 	for (int i = 0; i <= mx; ++i) f[i] = i;
+	for (int i = 1; i <= m; ++i){
+		int op; scanf("%d", &op);
+		if(op == 1){
+			int x, y; scanf("%d%d", &x, &y);
+			if(f[x] == f[y]) continue;
+			if(cnt[f[x]] > cnt[f[y]]) swap(f[x], f[y]);
+			x = f[x], y = f[y];
+			if(!cnt[x]) continue;
+			for (int j = tail[x]; j; j = nxt[j]){
+				if(a[j - 1] == y) --ans;
+				if(a[j + 1] == y) --ans;
+			}
+			for (int j = tail[x]; j; j = nxt[j]) a[j] = y;
+			nxt[head[x]] = tail[y], tail[y] = tail[x], cnt[y] += cnt[x];
+			cnt[x] = head[x] = tail[x] = 0;
+		}
+		else
+			printf("%d\n", ans);
+	}
+	return 0;
+}

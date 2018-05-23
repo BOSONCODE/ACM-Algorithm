@@ -1,0 +1,56 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define maxn 100005
+
+struct Trie{
+	int nxt[26];
+	int v; 
+	void init(){
+		v = 0;
+		memset(nxt, -1, sizeof nxt);
+	}
+}t[maxn*26];
+
+int tot = 0;
+
+void add(char a[], int len){
+	int now = 0;
+	for (int i = 0; i < len; ++i){
+		int tmp = a[i] - 'a';
+		int nxt = t[now].nxt[tmp];
+		if(nxt == -1){
+			nxt = ++tot;
+			t[nxt].init();
+			t[now].nxt[tmp] = nxt;
+		}
+		now = nxt;
+		t[now].v++;
+	}
+}
+
+int query(char a[], int len){
+	int now = 0;
+	for (int i = 0; i < len; ++i){
+		int id = a[i] - 'a';
+		if(~t[now].nxt[id]) now = t[now].nxt[id];
+		else return 0;
+	}
+	return t[now].v;
+}
+
+char str[200];
+
+int main(){
+	int n, q; read(n);
+	t[0].init();
+	for (int i = 1; i <= n; ++i) {
+		read(str);
+		add(str, strlen(str));
+	}
+	read(q);
+	for (int i = 1; i <= q; ++i){
+		read(str);
+		printf("%d\n", query(str, strlen(str)));
+	}
+	return 0;
+}

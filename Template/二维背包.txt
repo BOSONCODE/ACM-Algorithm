@@ -1,0 +1,28 @@
+#include <bits/stdc++.h>
+using namespace std;  
+
+int expe[105], tol[106];
+int dp[105][106];
+  
+int main(){
+	int n, m, k, s; 
+	while(cin >> n >> m >> k >> s){
+		for (int i = 1; i <= k; ++i)
+			cin >> expe[i] >> tol[i];
+		memset(dp, 0, sizeof dp);
+		for (int i = 1; i <= k; ++i)
+			for (int j = tol[i]; j <= m; ++j)
+				for (int p = 1; p <= s; ++p)
+					dp[j][p] = max(dp[j][p], dp[j - tol[i]][p-1] + expe[i]);
+		if(dp[m][s] >= n){
+			for (int j = 0; j <= m; ++j)
+				if(dp[j][s] >= n){
+					printf("%d\n", m - j);
+					break;
+				}
+		}else{
+			printf("%d\n", -1);
+		}
+	}
+	return 0;
+}

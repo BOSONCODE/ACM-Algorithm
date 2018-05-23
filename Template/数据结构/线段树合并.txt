@@ -1,0 +1,98 @@
+#include <bits/stdc++.h>
+using namespace std;
+const int maxn = 1e5 + 5;
+const int INF = 1e9 + 7;
+int a[maxn], n, r;
+
+struct Edge{
+    int v, nxt;
+}e[maxn << 1];
+int head[maxn], tot = 0;
+void init(){
+    memset(head, -1, sizeof head);
+    tot = 0;
+}
+void addedge(int u, int v){
+    e[tot].nxt = head[u];
+    e[tot].v = v;
+    head[u] = tot++;
+}
+
+int root[maxn], cnt = 0;
+int dep[maxn];
+
+struct node{
+    int l, r;
+    int val;
+}tree[maxn << 6];
+
+void pushup(int rt){
+    tree[rt].val = min(tree[tree[rt].l].val, tree[tree[rt].r].val);
+}
+
+void insert(int &rt, int l, int r, int k, int val){
+    rt = ++cnt;
+    if(l == r) {
+        tree[rt].val = val;
+        return ;
+    }
+    int mid = (l + r)/2;
+    if(mid >= k) insert(tree[rt].l, l, mid, k, val);
+    else insert(tree[rt].r, mid + 1, r, k, val);
+    pushup(rt);
+}
+
+int merge(int x, int y){
+    if(!x || !y) return x | y;
+    int t = ++cnt;
+    tree[t].l = merge(tree[x].l, tree[y].l);
+    tree[t].r = merge(tree[x].r, tree[y].r);
+    if(tree[t].l || tree[t].r) pushup(t);
+    else tree[t].val = min(tree[x].val, tree[y].val);
+    return t;
+}
+
+void dfs(int u, int p, int d = 1){
+    insert(root[u], 1, n, d, a[u]);
+    dep[u] = d;
+    for (int i = head[u]; ~i; i = e[i].nxt){
+        int v = e[i].v;
+        if(v == p) continue;
+        dfs(v, u, d + 1);
+        root[u] = merge(root[u], root[v]);
+    }
+}
+
+int query(int rt, int ql, int qr, int l, int r){
+    if(!rt) return INF;
+    if(ql <= l && r <= qr) return tree[rt].val;
+    int mid = (l + r)/2;
+    int ans = INF, ans2 = INF;
+    if(ql <= mid) ans = query(tree[rt].l, ql, qr, l, mid);
+    if(mid < qr) ans2 = query(tree[rt].r, ql, qr, mid + 1, r);
+    return min(ans, ans2);
+}
+
+int main(){
+    init(); tree[0].val = INF;
+    scanf("%d%d", &n, &r);
+    for (int i = 1; i <= n; ++i)
+        scanf("%d", a + i);
+    for (int i = 1; i <= n - 1; ++i){
+        int x, y; scanf("%d%d", &x, &y);
+        addedge(x, y);
+        addedge(y, x);
+    }
+    dfs(r, -1);
+    int q; scanf("%d", &q);
+    int last = 0, ans = 0;
+    while(q-->0){
+        int p, k; scanf("%d%d", &p, &k);
+        p = (p + last)%n + 1;
+        k = (k + last)%n;
+        ans = query(root[p], dep[p], min(dep[p] + k, n), 1, n);
+        last = ans;
+        printf("%d\n", ans);
+    }
+    return 0;
+}

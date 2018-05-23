@@ -1,0 +1,43 @@
+#include<iostream>
+#include<algorithm>
+#include<cstdio>
+#include<cstring>
+#define LL __int64
+using namespace std;
+
+LL Q[100010],factor[110],num;
+
+void Divid(LL n){
+    num = 0;
+    for(LL i = 2; i*i <= n; ++i)
+        if(n%i==0){
+            while(n%i==0){
+                n /= i;
+            }
+            factor[num++] = i;
+        }
+    if(n != 1) factor[num++] = n;
+}
+
+LL solve(LL n){  //ÈÝ³â¶¨Àí
+    LL k,t,ans; t = ans = 0; Q[t++] = -1;
+    for(LL i = 0; i < num; ++i){k = t;
+        for(LL j = 0; j < k; ++j) Q[t++] = -1*Q[j]*factor[i];
+    }
+    for(LL i = 1; i < t; ++i)
+        ans += n/Q[i];
+    return ans;
+}
+
+int main(){
+    int T,kase = 0;
+    scanf("%d",&T);
+    while(T--){
+        LL a,b,n;
+        scanf("%I64d%I64d%I64d",&a,&b,&n);
+        Divid(n);
+        LL ans = b - solve(b) - (a-1-solve(a-1));
+        printf("Case #%d: %I64d\n",++kase,ans);
+    }
+    return 0;
+}

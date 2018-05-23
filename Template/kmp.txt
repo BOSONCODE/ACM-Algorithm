@@ -1,0 +1,40 @@
+/*************************************************************************
+    > File Name: kmp.cpp
+    > Author: BOSON
+    > Mail: suda1527403057@163.com 
+    > Created Time: 2017年09月30日 星期六 06时52分12秒
+ ************************************************************************/
+
+#include<bits/stdc++.h>
+using namespace std;
+#define maxn 10000
+int nxt[maxn];
+char pattern[maxn], s[maxn];
+int lenpattern, lens;
+
+void getNext(){
+	int i = 0, j = -1; nxt[0] = -1;
+	while(i < lenpattern){
+		if(-1 == j || pattern[i] == pattern[j]) nxt[++i] = ++j;
+		else j = nxt[j];
+	}
+}
+
+int kmp(){
+	int res = 0, i = 0, j = 0;
+	while(i < lens){
+		if(-1 == j || s[i] == pattern[j]) ++j, ++i;
+		else j = nxt[j];
+		res = max(res, j);
+	}
+	return res;
+}
+
+int main(){
+	cin >> pattern >> s;
+	lenpattern = strlen(pattern);
+	lens = strlen(s);
+	getNext();
+	cout << kmp() << endl;
+	return 0;
+}

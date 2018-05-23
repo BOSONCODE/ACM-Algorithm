@@ -1,0 +1,43 @@
+//给一个n，在p∈[1,n]范围满足mk=p(m≥1,k>1的数字p的个数。 数据范围：1≤n≤1018 
+我们可以枚举幂次k，考虑到260>1018，最多只需要枚举到60幂次。 
+同时对于一个数p的幂次k是个合数，那么k一定可以表示成k=r?k′,其中k′是素数的形式，那么： 
+p=m^k=m^(rk')=(m^r)k′
+所以我们只需要枚举素幂次k即可。 
+同时如果p^k≤n，那么对于任意的p′<p，也一定满足p′k≤n。所以对于每个k我们令pk=n，即p=n1n，求出最大的p，同时也就是满足p^k≤n的所有p的个数。 
+但是这样子会有重复。例如：k=2时，(22)3和k=3时,(23)2就重复计数了(都是26)。这时候需要用容斥原理：加上奇数个素幂次相乘的个数，减去偶数个素幂次相乘的个数。又因为2?3?5<60,2?3?5?7>60，那么最多只要考虑三个素幂次相乘情况。
+using namespace std;
+typedef long long ll;
+const ll prime[20] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59};
+const int len = 17;
+const double eps = 1e-8;
+
+ll ans;
+double n;
+
+void dfs(int cur, int num, int total, ll k){
+    if(k > 60) return; //素因子连乘最多不能超过60次幂，因为2 ^ 60 > 10 ^ 18
+    if(num == total) {
+        ll p = (ll)(pow(n, 1.0 / (0.0 + k)) + eps) - 1; //先把1去掉,eps精度误差
+        ans += p;
+        return ; 
+    }
+    if(cur == len) return ;
+    dfs(cur + 1, num, total, k); //第i个素数不选
+    dfs(cur + 1, num + 1, total, k * prime[cur]); //第i个素数选择
+}
+
+int main(){
+    while(~scanf("%lf", &n)) {
+        ll res = 0;
+        for(int i = 1; i <= 3; ++i) {
+            ans = 0;
+            dfs(0, 0, i, 1); 
+            //从下标0开始，当前选择素数个数为0,需要选择素数个数i个,选择素数乘积为1
+            if(i & 1) res += ans;
+            else res -= ans;
+        }
+        res += 1; //1在dfs时都没有统计
+        printf("%lld\n", res);
+    }
+    return 0;
+}

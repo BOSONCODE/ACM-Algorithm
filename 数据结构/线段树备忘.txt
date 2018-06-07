@@ -1,0 +1,88 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+const int maxn = 1e5 + 5;
+int a[maxn];
+struct node{
+	int l, r;
+	long long val;
+	long long lazy;
+}tree[maxn << 2];
+
+void pushup(int rt){
+	tree[rt].val = tree[rt << 1].val + tree[rt << 1 | 1].val;
+}
+
+void build(int rt, int l, int r){
+	tree[rt].l = l, tree[rt].r = r; 
+	if (l == r){
+		tree[rt].val = a[l];
+		return; 
+	}
+	int mid = l + r >> 1;
+	build(rt << 1, l, mid);
+	build(rt << 1 | 1, mid + 1, r);
+	pushup(rt);
+}
+
+void pushdown(int rt){
+	if(tree[rt].lazy){
+		int L = tree[rt].l, R = tree[rt].r, len = R - L + 1;
+		tree[rt << 1].val += tree[rt].lazy*(len - (len >> 1));
+		tree[rt << 1 | 1].val += tree[rt].lazy*(len >> 1);
+		tree[rt << 1].lazy += tree[rt].lazy;
+		tree[rt << 1 | 1].lazy += tree[rt].lazy;
+		tree[rt].lazy = 0;
+	}
+}
+
+void update(int rt, int l, int r, int v, int flag = 0){
+	int L = tree[rt].l, R = tree[rt].r;
+	if (l <= L && R <= r) {
+		if (flag){tree[rt].val += (long long)(R - L + 1)*v;
+			tree[rt].lazy += v;
+		}else{
+			tree[rt].val = v;
+			tree[rt].lazy = 0;
+		}
+		return;
+	}
+	pushdown(rt);
+	int mid = L + R >> 1;
+	if (l <= mid) update(rt << 1, l, r, v);
+	if (mid < r) update(rt << 1 | 1, l, r, v);
+	pushup(rt);
+}
+
+long long query(int rt, int pos){
+	int l = tree[rt].l, r = tree[rt].r;
+	//cout << l << " " << r << endl;
+	if (l == r && l == pos){
+		return tree[rt].val;
+	}
+	pushdown(rt);
+	int mid = l + r >> 1;
+	if (mid < pos) return query(rt << 1 | 1, pos);
+	else return query(rt << 1, pos);
+}
+
+int main(){
+	int n, m; scanf("%d%d", &n, &m);
+	for (int i = 1; i <= n; ++i)
+		scanf("%d", &a[i]);
+	build(1, 1, n);
+	for (int i = 1; i <= m; ++i){
+		int t, x, y; scanf("%d", &t);
+		if (t == 1){
+			scanf("%d%d", &x, &y);
+			update(1, x, x, y);
+		}else if(t == 2){
+			scanf("%d", &x);
+			update(1, 1, n, x, 1);
+		}else {
+			scanf("%d", &x);
+			printf("%lld\n", query(1, x));
+		}
+	}
+	return 0;
+}

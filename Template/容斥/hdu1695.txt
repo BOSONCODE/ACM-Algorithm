@@ -1,0 +1,56 @@
+题目大意： 输入一个a，b，n。 让你求a~b中有多少个数和n互素。1和任何数都互素
+using namespace std;
+#define ll long long
+#define maxn 200055
+int a, b, c, d, k;
+vector<int>bit[maxn];
+int tot = 0;
+int prime[maxn];
+int primecnt = 0;
+bool vis[maxn];
+
+void init(){
+	memset(vis, true, sizeof vis);
+	for (int i = 2; i < maxn; ++i){
+		if(vis[i]){
+			bit[i].push_back(i);
+			for (int j = i + i; j < maxn; j += i){
+				vis[j] = false;
+				bit[j].push_back(i);
+			}
+		}
+	}
+}
+
+void solve(int cas){
+	scanf("%d%d%d%d%d", &a, &b, &c, &d, &k);
+	if(!k){ printf("Case %d: %d\n", cas, 0); return ;}
+	b /= k; d /= k;
+	if(b > d) swap(b, d);
+	ll res = 0, ans = 0;
+	for (int i = 1; i <= d; ++i){
+		int sz = bit[i].size();
+		int len = 1 << sz;
+		ans += min(i, b); res = 0ll;
+		for (int s = 1; s < len; ++s){
+			ll tmp = 1ll; bool isodd = false;
+			for (int q = 0; q < sz; ++q){
+				if((1 << q) & s){
+					isodd = !isodd;
+					tmp *= bit[i][q];
+				}
+			}
+			if(isodd) res += min(i, b)/tmp;
+			else res -= min(i, b)/tmp;
+		}
+		ans -= res;
+	}
+	printf("Case %d: %lld\n", cas, ans);
+}
+
+int main(){
+	init();
+	int t; scanf("%d", &t);
+	for (int cas = 1; cas <= t; ++cas) solve(cas);
+	return 0;
+}

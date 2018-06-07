@@ -1,0 +1,136 @@
+#include <bits/stdc++.h>
+using namespace std;
+const int maxn=1005;
+const int INF=1e9+7;
+int n;
+int Mat[maxn][maxn];
+struct IntervalTree2D{
+    int Max[maxn<<2][maxn<<2],Min[maxn<<2][maxn<<2];
+    int xl,xr,yl,yr,rt1,maxv,minv,x,y,v,leaf;
+    inline void push_up_2D(int rt){
+        Max[rt1][rt]=max(Max[rt1<<1][rt],Max[rt1<<1|1][rt]);
+        Min[rt1][rt]=min(Min[rt1<<1][rt],Min[rt1<<1|1][rt]);
+    }
+    inline void push_up_1D(int rt){
+        Max[rt1][rt]=max(Max[rt1][rt<<1],Max[rt1][rt<<1|1]);
+        Min[rt1][rt]=min(Min[rt1][rt<<1],Min[rt1][rt<<1|1]);
+    }
+    void build(){
+        build_2D(1,1,n);
+    }
+    void build_1D(int rt,int l,int r){
+        if(l==r){
+            if(leaf) Max[rt1][rt]=Min[rt1][rt]=Mat[x][l];
+            else push_up_2D(rt);
+            return;
+        }
+        int mid=(l+r)>>1;
+        build_1D(rt<<1,l,mid);
+        build_1D(rt<<1|1,mid+1,r);
+        push_up_1D(rt);
+    }
+    void build_2D(int rt,int l,int r){
+        if(l==r){
+            leaf=true;
+            x=l;
+            rt1=rt;
+            build_1D(1,1,n);
+            return;
+        }
+        int mid=(l+r)>>1;
+        build_2D(rt<<1,l,mid);
+        build_2D(rt<<1|1,mid+1,r);
+        leaf=false;rt1=rt;
+        build_1D(1,1,n);
+    }
+    void query(int _xl,int _xr,int _yl,int _yr){
+        xl=_xl;xr=_xr;yl=_yl;yr=_yr;
+        minv=INF;maxv=-INF;
+        query_2D(1,1,n);
+    }
+    void query_2D(int rt,int l,int r){
+        if(r<=xr&&l>=xl){
+            rt1=rt;
+            query_1D(1,1,n);
+            return;
+        }
+        int mid=(l+r)>>1;
+        if(xl<=mid) query_2D(rt<<1,l,mid);
+        if(xr>mid) query_2D(rt<<1|1,mid+1,r);
+    }
+    void query_1D(int rt,int l,int r){
+        if(l>=yl&&r<=yr){
+            maxv=max(maxv,Max[rt1][rt]);
+            minv=min(minv,Min[rt1][rt]);
+            return;
+        }
+        int mid=(l+r)>>1;
+        if(yl<=mid) query_1D(rt<<1,l,mid);
+        if(yr>mid) query_1D(rt<<1|1,mid+1,r);
+    }
+    void modify(int _x,int _y,int _v){
+        x=_x;y=_y;v=_v;
+        modify_2D(1,1,n);
+    }
+    void modify_1D(int rt,int l,int r){
+        if(l==r){
+            if(leaf) Max[rt1][rt]=Min[rt1][rt]=v;
+            else push_up_2D(rt);
+            return;
+        }
+        int mid=(l+r)>>1;
+        if(y<=mid) modify_1D(rt<<1,l,mid);
+        if(y>mid) modify_1D(rt<<1|1,mid+1,r);
+        push_up_1D(rt);
+    }
+    void modify_2D(int rt,int l,int r){
+        if(l==r){   
+            rt1=rt;
+            leaf=true;
+            modify_1D(1,1,n);
+            return;
+        }
+        int mid=(l+r)>>1;
+        if(x<=mid) modify_2D(rt<<1,l,mid);
+        if(x>mid) modify_2D(rt<<1|1,mid+1,r);
+        rt1=rt;
+        leaf=false;
+        modify_1D(1,1,n);
+    }
+}tree;
+
+void solve(){
+    scanf("%d", &n);
+    for(int i=1;i<=n;i++)
+        for(int j=1;j<=n;j++)
+             scanf("%d",&Mat[i][j]);
+    tree.build();
+    int q, x1, y1, x2;
+    scanf("%d",&q);
+    while(q--){
+        scanf("%d%d%d", &x1, &x2, &y1);
+        y1 = y1/2 + y1%2;
+        int xl = x1 - y1 + 1, xr = x1 + y1 - 1;
+        int yl = x2 - y1 + 1, yr = x2 + y1 - 1;
+        if(xl < 1) xl = 1;
+        if(xr > n) xr = n;
+        if(yl < 1) yl = 1;
+        if(yr > n) yr = n;
+        //cout << xl << " " << xr << " " << yl << " " << yr << endl;
+        tree.query(xl, xr, yl, yr);
+        int A = tree.maxv, B = tree.minv;
+        //cout << A << " " << B << endl;
+        //tree.query(min(x1,x2),max(x1,x2),min(y1,y2),max(y1,y2));
+        printf("%d\n", (A+B)/2);
+        tree.modify(x1, x2, (A+B)/2);
+    }
+}
+
+int main(){
+	int t; scanf("%d", &t);
+	for (int i = 1; i <= t; ++i) {
+		printf("Case #%d:\n", i);
+		solve();
+	}
+	return 0;
+}

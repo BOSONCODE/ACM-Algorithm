@@ -1,0 +1,85 @@
+#include<iostream>
+#include<cstdio>
+#include<queue>
+#include<vector>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=30000+5; 
+struct Edge{
+	int from,to,weight;
+	Edge(int from,int to,int weight):from(from),to(to),weight(weight){}
+};
+struct HeapNode{  //prority_queue 中的优先级 
+	int u,dist;   //dist: u点到起点的最短路 ,u: 有向边的终点 
+	HeapNode(int u,int d):u(u),dist(d){}
+	bool operator < (const HeapNode& h) const {
+		return dist>h.dist;
+	}
+};
+struct Dijkstra{ //打包在Dijkstra中 
+	int n,m;
+	vector<Edge> edges;
+	vector<int> G[maxn];
+	bool done[maxn];
+	int dist[maxn];
+	int p[maxn];
+	Dijkstra(int n):n(n){
+		for(int i=0;i<n;i++) G[i].clear();
+		edges.clear();
+	}
+	void AddEdge(int from,int to,int weight){
+		edges.push_back(Edge(from,to,weight));
+		m=edges.size();
+		G[from].push_back(m-1);  //保存from出发的边 
+	}
+	void dijkstra(int s)
+	{
+		priority_queue<HeapNode> Q;
+		memset(dist,0x7f,sizeof(dist));
+		memset(done,false,sizeof(done));
+		
+		dist[s]=0;
+		Q.push(HeapNode(s,0));
+		while(!Q.empty())
+		{
+			int u=Q.top().u; Q.pop();
+			if(done[u]) continue;
+			done[u]=true;
+			for(int i=0;i<G[u].size();i++)
+			{
+				Edge& e=edges[G[u][i]];
+				int v=e.to ,w=e.weight;
+				if(dist[v]>dist[u]+w)
+				{
+					dist[v]=dist[u]+w;
+					p[v]=G[u][i];          //记录到各点的最短路径 
+					Q.push(HeapNode(v,dist[v]));
+				}
+			}
+		}
+	}
+};
+int main()
+{
+	int n,m,u,v,w;
+	cin>>n>>m;       //n 点 , m 边 
+	Dijkstra d(n);
+	for(int i=0;i<m;i++)
+	{
+		scanf("%d%d%d",&u,&v,&w);
+		d.AddEdge(u,v,w);
+	}
+	d.dijkstra(1);          //1点出发 
+	cout<<d.dist[n]<<endl;  //到n的最短路径 
+	
+	vector<int> ans;  //打印1~n的路径 
+	for(int i=n;i!=1;i=d.edges[d.p[i]].from)
+	ans.push_back(i);
+	for(int i=ans.size()-1;i>=0;i--)
+	cout<<ans[i]<<' ';
+	cout<<1<<endl;
+	cout<<endl;
+	
+	return 0;
+}

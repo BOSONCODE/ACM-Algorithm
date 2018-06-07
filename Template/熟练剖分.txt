@@ -1,0 +1,160 @@
+#include <bits/stdc++.h>
+using namespace std;
+const int maxn = 3e4 + 10;
+int fa[maxn], top[maxn], sz[maxn];
+int p[maxn], son[maxn], dep[maxn], fp[maxn];
+int a[maxn];
+
+struct Edge{
+	int nxt, v; 
+}e[maxn << 1];
+int head[maxn], tot = 0, pos = 1;
+void init(){
+	memset(head, -1, sizeof head);
+	memset(son, -1, sizeof son);
+	tot = 0, pos = 1;
+}
+void addedge(int u, int v){
+	e[tot].v = v;
+	e[tot].nxt = head[u];
+	head[u] = tot++;
+}
+
+void dfs1(int u, int p, int d){ //fa, dep, sz, son
+	dep[u] = d; sz[u] = 1; fa[u] = p;
+	for (int i = head[u]; ~i; i = e[i].nxt){
+		int v = e[i].v;
+		if(v == p) continue;
+		dfs1(v, u, d + 1);
+		sz[u] += sz[v];
+		if(son[u] == -1 || sz[son[u]] < sz[v])
+			son[u] = v;
+	}
+}
+
+void dfs2(int u, int sp){ //top and p
+	top[u] = sp;p[u] = pos++; fp[p[u]] = u;
+	if(-1 == son[u]) return; 
+	dfs2(son[u], sp);
+	for (int i = head[u]; ~i; i = e[i].nxt){
+		int v = e[i].v;
+		if(v != son[u] && v != fa[u])
+			dfs2(v, v);
+	}
+}
+
+struct SegmentTree{
+	int l, r;
+	int val, sum;
+	int getmid(){ return (l + r)/2;}
+}tree[maxn << 2];
+void pushup(int rt){
+	tree[rt].val = max(tree[rt << 1].val, tree[rt << 1 | 1].val);
+	tree[rt].sum = tree[rt << 1].sum + tree[rt << 1 | 1].sum;
+}
+void build(int rt, int l, int r){
+	tree[rt].l = l; tree[rt].r = r;
+	if(l == r){
+		tree[rt].val = tree[rt].sum = a[fp[l]];
+		return ;
+	}
+	int mid = (l + r)/2;
+	build(rt << 1, l, mid);
+	build(rt << 1 | 1, mid + 1, r);
+	pushup(rt);
+}
+void update(int rt, int pos, int v){
+	int L = tree[rt].l, R = tree[rt].r;
+	if(L == R) {
+		tree[rt].sum = tree[rt].val = v;
+		return ;
+	}
+	int mid = tree[rt].getmid();
+	if(pos <= mid) update(rt << 1, pos, v);
+	else update(rt << 1 | 1, pos, v);
+	pushup(rt);
+}
+int querymax(int rt, int l, int r){
+	int L = tree[rt].l, R = tree[rt].r;
+	if(l <= L && R <= r) return tree[rt].val;
+	int mid = tree[rt].getmid();
+	int p1 = -1000000000, p2 = -1000000000;
+	if(l <= mid) p1 = querymax(rt << 1, l, r);
+	if(mid < r) p2 = querymax(rt << 1 | 1, l, r);
+	return max(p1, p2);
+}
+int querysum(int rt, int l, int r){
+	int L = tree[rt].l, R = tree[rt].r;
+	if(l <= L && R <= r) return tree[rt].sum;
+	int mid = tree[rt].getmid();
+	int p1 = 0, p2 = 0;
+	if(l <= mid) p1 = querysum(rt << 1, l, r);
+	if(mid < r) p2 = querysum(rt << 1 | 1, l, r);
+	return p1 + p2;
+}
+
+int findmax(int u, int v){
+	int f1 = top[u], f2 = top[v], tmp = -1000000000;
+	while(f1 != f2){
+		if(dep[f1] < dep[f2]){
+			swap(f1, f2);
+			swap(u, v);
+		}
+		tmp = max(tmp, querymax(1, p[f1], p[u]));
+		u = fa[f1]; f1 = top[u];
+	}
+	if(dep[u] > dep[v]) swap(u, v);
+	return max(tmp, querymax(1, p[son[u]], p[v]));
+}
+
+int findsum(int u, int v){
+	int f1 = top[u], f2 = top[v], tmp = 0;
+	while(f1 != f2){
+		if(dep[f1] < dep[f2]){
+			swap(f1, f2);
+			swap(u, v);
+		}
+		tmp = tmp + querysum(1, p[f1], p[u]);
+		u = fa[f1]; f1 = top[u];
+	}
+	if(dep[u] > dep[v]) swap(u, v);
+	return tmp + querysum(1, p[u], p[v]);
+}
+
+void run(){
+	dfs1(1, 0, 0);
+	dfs2(1, 1);
+}
+
+int u[maxn], v[maxn], w[maxn];
+
+int solve(){
+	int n; 
+	scanf("%d", &n) ;
+		init();
+		for (int i = 1; i < n; ++i){
+			scanf("%d%d%d", &u[i], &v[i], &w[i]);
+			addedge(u[i], v[i]); addedge(v[i], u[i]);
+		}
+		run();
+		for (int i = 1; i < n; ++i){
+			if(dep[u[i]] < dep[v[i]])
+				swap(u[i], v[i]);
+			a[u[i]] = w[i];
+		}
+		build(1, 1, pos-1);
+		char op[10]; 
+		while(scanf("%s", op) && op[0] != 'D'){
+			int a, b; scanf("%d%d", &a, &b);
+			if(op[0] == 'C') update(1, p[u[a]], b);
+			else if(op[1] == 'U') printf("%d\n", findmax(a, b));
+			//else if(op[1] == 'S') printf("%d\n", findsum(a, b));
+		}
+	return 0;
+}
+
+int main(){
+	int t; scanf("%d", &t);
+	while(t--) solve();
+	return 0;
+}

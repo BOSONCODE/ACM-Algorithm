@@ -1,0 +1,125 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define maxn 250005
+
+namespace SuffixAutomation {
+    struct sam {
+        int fa, go[26];
+        int len, r;
+        int cnt;
+        void init() {
+            fa = len = r = 0;
+            memset(go, 0, sizeof go);
+        }
+    }node[maxn];
+    int rt, last, tot;
+    void init() {
+        rt = last = tot = 1;
+        node[0].init();
+        node[1].init();
+    }
+    int newnode() {
+        node[++tot].init();
+        return tot;
+    }
+    void extend(int c) {
+        int p = last, np = newnode();
+        node[np].len = node[p].len + 1; node[np].r = 1;
+        while (p && !node[p].go[c]) node[p].go[c] = np, p = node[p].fa;
+        if (!p) node[np].fa = rt;
+        else {
+            int q = node[p].go[c];
+            if (node[p].len + 1 == node[q].len) node[np].fa = q;
+            else {
+                int nq = newnode(); 
+                node[nq].len = node[p].len + 1;
+                memcpy(node[nq].go, node[q].go, sizeof(node[q].go));
+                node[nq].fa = node[q].fa; node[np].fa = node[q].fa = nq;
+                while (p && node[p].go[c] == q)
+                    node[p].go[c] = nq, p = node[p].fa;
+            }
+        }
+        last = np;
+    }
+}
+using namespace SuffixAutomation;
+
+int v[maxn], q[maxn];
+
+void topsort() {
+    memset(v, 0, sizeof v);
+    for (int i = 1; i <= tot; ++i) ++v[node[i].len];
+    for (int i = 1; i <= tot; ++i) v[i] += v[i - 1];
+    for (int i = tot; i; --i) q[v[node[i].len]--] = i;
+    for (int i = 1; i <= tot; ++i) node[i].cnt = 1;
+}
+
+char s[maxn];
+char ch[maxn][26];
+int son[maxn][26];
+int cnt[maxn];
+
+void pre(){
+    topsort();
+    for (int i = tot; i >= 1; --i){
+        int u = q[i];
+        for (int j = 0; j < 26; ++j){
+            if(node[u].go[j]){
+                node[u].cnt += node[node[u].go[j]].cnt;
+               // ch[u][cnt[u]] = j + 'a';
+                //son[u][cnt[u]++] = node[u].go[j];
+            }
+        }
+    }
+}
+
+char ans[maxn];
+
+void run(int k){
+    int p = rt;
+    int len = 0;
+    while(k){
+        for (int i = 0; i < cnt[p]; ++i){
+            if(k > node[son[p][i]].cnt){
+                k -= node[son[p][i]].cnt;
+            }else{
+                ans[len++] = ch[p][i];
+                p = son[p][i];
+                --k;
+                break;
+            }
+        }
+    }
+    ans[len] = '\0';
+    printf("%s\n", ans);
+}
+
+void work(int k){
+    int p = rt, len = 0;
+    while(k){
+        for (int i = 0; i < 26; ++i){
+            if(node[p].go[i]){
+                if(node[node[p].go[i]].cnt >= k){
+                    --k; putchar(i + 'a');
+                    p = node[p].go[i];
+                    break;
+                }else k -= node[node[p].go[i]].cnt;
+            }
+        }
+    }
+    puts("");
+}
+
+int main(){
+    scanf("%s", s) ;
+        init(); int len = strlen(s);
+        for (int i = 0; i < len; ++i) extend(s[i] - 'a');
+        int q; scanf("%d", &q);
+        pre();
+        while(q-->0){
+            int k; scanf("%d", &k);
+            work(k);
+        }
+    return 0;
+}

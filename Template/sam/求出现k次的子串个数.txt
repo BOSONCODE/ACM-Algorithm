@@ -1,0 +1,97 @@
+//求出现k次的子串的个数
+/*
+2
+2
+abcabc
+3
+abcabcabcabc
+*/
+#include <bits/stdc++.h>
+using namespace std;
+
+#define maxn 500005
+
+namespace SuffixAutomation {
+    struct sam {
+        int fa, go[26];
+        int len, r;
+        int cnt;
+        int endpos;
+        int pos;
+        void init() {
+            fa = len = r = cnt = 0;
+            memset(go, 0, sizeof go);
+        }
+    }node[maxn];
+    int rt, last, tot;
+    void init() {
+        rt = last = tot = 1;
+        node[0].init();
+        node[1].init();
+    }
+    int newnode() {
+        node[++tot].init();
+        return tot;
+    }
+    void extend(int c) {
+        int p = last, np = newnode();
+        node[np].len = node[p].len + 1; 
+        while (p && !node[p].go[c]) node[p].go[c] = np, p = node[p].fa;
+        if (!p) node[np].fa = rt;
+        else {
+            int q = node[p].go[c];
+            if (node[p].len + 1 == node[q].len) node[np].fa = q;
+            else {
+                int nq = newnode(); 
+                node[nq].len = node[p].len + 1;
+                memcpy(node[nq].go, node[q].go, sizeof(node[q].go));
+                node[nq].fa = node[q].fa; node[np].fa = node[q].fa = nq;
+                while (p && node[p].go[c] == q)
+                    node[p].go[c] = nq, p = node[p].fa;
+            }
+        }
+        last = np;
+    }
+
+    int v[maxn], q[maxn];
+
+    void topsort() {
+        memset(v, 0, sizeof v);
+        for (int i = 1; i <= tot; ++i) ++v[node[i].len];
+        for (int i = 1; i <= tot; ++i) v[i] += v[i - 1];
+        for (int i = tot; i; --i) q[v[node[i].len]--] = i;
+    }
+};
+using namespace SuffixAutomation;
+
+char s[maxn];
+
+int main(){
+    int t; scanf("%d", &t);
+    while(t-->0){
+        init();
+        int k; scanf("%d", &k);
+        scanf("%s", s);
+        for (int i = 0; s[i]; ++i) extend(s[i] - 'a');
+        topsort(); int p = rt;
+        for (int i = 0; s[i]; ++i) {
+            p = node[p].go[s[i]-'a'];
+            node[p].cnt++;
+        }
+        for (int i = tot; i >= 1; --i) {
+            int pp = q[i];
+            node[node[pp].fa].cnt += node[pp].cnt;
+        }
+        long long ans = 0, ans2 = 0;
+        for (int i = 1; i <= tot; ++i){
+            if(node[i].cnt >= k)
+                ans += node[i].len - node[node[i].fa].len;
+        }
+        for (int i = 1; i <= tot; ++i){
+            if(node[i].cnt >= k + 1)
+                ans2 += node[i].len - node[node[i].fa].len;
+        }
+        printf("%lld\n", ans - ans2);
+    }
+    return 0;
+}

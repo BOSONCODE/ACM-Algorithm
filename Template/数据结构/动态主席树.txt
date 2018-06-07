@@ -1,0 +1,139 @@
+#define inf 1000000005  
+#define M 2560005 
+#define N 61005
+#define maxn 210005  
+#define LL long long  
+#define MOD 1000000007
+#define pi acos(-1.0)
+#define lowbit(x) ((-(x))&(x))
+#pragma comment(linker, "/STACK:1024000000,1024000000")  
+using namespace std;
+int tot=0,n,m=0,q;
+int a[N],h[N];
+int T[N],c[M],lson[M],rson[M];
+struct Question{
+    int kind;
+    int l,r,k;
+    Question(){}
+    Question(int k,int l,int r,int _k):kind(k),l(l),r(r),k(_k){}
+}Q[N];
+void Init_hash(int k){
+    sort(h,h+k);
+    m=unique(h,h+k)-h;
+}
+int hash(int x){
+    return lower_bound(h,h+m,x)-h;
+}
+int bulid(int l,int r){
+    int root=tot++;
+    if(l!=r){
+        int mid=(l+r)>>1;
+        lson[root]=bulid(l,mid);
+        rson[root]=bulid(mid+1,r);
+    }
+    return root;
+}
+int update(int root,int pos,int val){
+    int newroot=tot++,tmp=newroot;
+    int l=0,r=m-1;
+    c[newroot]=c[root]+val;
+    while(l<r){
+        int mid=(l+r)>>1;
+        if(pos<=mid){  
+            lson[newroot]=tot++;rson[newroot]=rson[root];  
+            newroot=lson[newroot];root=lson[root];  
+            r=mid;  
+        }  
+        else{  
+            rson[newroot]=tot++;lson[newroot]=lson[root];  
+            newroot=rson[newroot];root=rson[root];  
+            l=mid+1;  
+        }  
+        c[newroot]=c[root]+val;
+    }
+    return tmp;
+}
+int use[N];
+void add(int x,int pos,int val){
+    //更新的时候，维护树状数组
+    for(int i=x;i<=n;i+=lowbit(i))
+        T[i]=update(T[i],pos,val);
+}
+int sum(int x){
+    int ret=0;
+    for(int i=x;i;i-=lowbit(i))
+        ret+=c[lson[use[i]]];
+    return ret;
+}
+int query(int left,int right,int k){
+    int l=0,r=m-1;
+    for(int i=left-1;i;i-=lowbit(i)) use[i]=T[i];
+    for(int i=right;i;i-=lowbit(i)) use[i]=T[i];
+    while(l<r){
+        int mid=(l+r)>>1;
+        int tmp=sum(right)-sum(left-1);
+        if(tmp>=k){
+            r=mid;
+            for(int i=left-1;i;i-=lowbit(i))
+                use[i]=lson[use[i]];
+            for(int i=right;i;i-=lowbit(i))
+                use[i]=lson[use[i]];
+        }
+        else{
+            l=mid+1;
+            k-=tmp;
+            for(int i=left-1;i;i-=lowbit(i))
+                use[i]=rson[use[i]];
+            for(int i=right;i;i-=lowbit(i))
+                use[i]=rson[use[i]];
+        }
+    }
+    return l;
+}
+void Init_tree(){
+    T[0]=bulid(0,m-1);
+    //所有位置初始为空树
+    for(int i=1;i<=n;i++)
+        T[i]=T[0];
+    //更新所有位置
+    for(int i=1;i<=n;i++)
+        add(i,hash(a[i]),1);
+}
+int main(){
+    int t=1;
+    scanf("%d",&t);
+    while(t--){
+        tot=0;m=0;
+        scanf("%d%d",&n,&q);
+        for(int i=1;i<=n;i++){
+            scanf("%d",&a[i]);
+            h[m++]=a[i];
+        }
+        for(int i=0;i<q;i++){
+            char str[5];int l,r,k;
+            scanf("%s",str);
+            if(str[0]=='Q'){
+                scanf("%d%d%d",&l,&r,&k);
+                Q[i]=Question(0,l,r,k);
+            }
+            else{
+                scanf("%d%d",&l,&k);
+                Q[i]=Question(1,l,0,k);
+                h[m++]=k;
+            }
+        }
+        Init_hash(m);
+        Init_tree();
+        for(int i=0;i<q;i++){
+            if(Q[i].kind==0){
+                printf("%d\n",h[query(Q[i].l,Q[i].r,Q[i].k)]);
+            }
+            else{
+                add(Q[i].l,hash(a[Q[i].l]),-1);
+                add(Q[i].l,hash(Q[i].k),1);
+                a[Q[i].l]=Q[i].k;
+            }
+        }
+    }
+    return 0;
+}

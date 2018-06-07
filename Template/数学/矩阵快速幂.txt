@@ -1,0 +1,68 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+//f[n][0] = f[n-1][0] + f[n-1][1]
+//f[n][1] = f[n-1][1] + f[n-2][0]
+
+const int ROW = 3, COL = 3;
+const int mod = 1e9 + 7;
+
+struct Matrix{
+	long long c[ROW+1][COL+1];
+	Matrix (){
+		for (int i = 1; i <= ROW; ++i)
+			for (int j = 1; j <= COL; ++j)
+				c[i][j] = (i == j);
+	}
+	Matrix operator * (const Matrix &rhs) const{
+		Matrix res;
+		for (int i = 1; i <= ROW; ++i){
+			for (int j = 1; j <= COL; ++j){
+				res.c[i][j] = 0;
+				for (int k = 1; k <= COL; ++k)
+					res.c[i][j] = (res.c[i][j] + c[i][k]*rhs.c[k][j]%mod)%mod;
+			}
+		}
+		return res;
+	}
+	void print(){
+		for (int i = 1; i <= ROW; ++i)
+			for (int j = 1; j <= COL; ++j)
+				cout << c[i][j] << (j == COL ? "\n" : " ");
+	}
+};
+
+Matrix quick_pow(Matrix a, long long b){
+	Matrix res;
+	while (b){
+		if (b & 1) res = res*a;
+		b >>= 1;
+		a = a*a;
+	}
+	return res; 
+}
+
+void init(Matrix &a){
+	a.c[3][3] = 0; 
+	a.c[1][2] = a.c[2][3] = a.c[3][1] = 1; 
+}
+
+long long solve(long long n){
+ 	if (n == 1) return 1; 
+ 	if (n == 2) return 2;
+ 	Matrix tran;
+ 	init(tran);
+ 	Matrix res = quick_pow(tran, n-2);
+ 	long long ans = 0;
+ 	for (int i = 1; i <= 2; ++i)
+ 		for (int j = 1; j <= 3; ++j)
+ 			ans = (ans + res.c[i][j])%mod;
+ 	return ans;
+}
+
+int main(){
+	long long n; 
+	while (cin >> n)
+		cout << solve(n) << endl; 
+	return 0;
+}

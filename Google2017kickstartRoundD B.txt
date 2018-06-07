@@ -1,0 +1,159 @@
+#include <iostream>
+#include <string.h>
+#include <string>
+#include <algorithm>
+#include <stdio.h>
+#include <vector>
+#include <map>
+#include <set>
+#include <time.h>
+#include <queue>
+#include <stack>
+#include <functional>
+#include <bitset>
+#include <fstream>
+using namespace std;
+
+#define maxn 400005
+
+long long A[maxn], B[maxn];
+long long x[maxn], y[maxn];
+long long suma[maxn], sumb[maxn];
+long long aa[maxn], bb[maxn],cnta,cntb;
+bool Left[maxn];
+int C[maxn];
+
+struct node {
+	long long sum;
+	int r;
+	node() {}
+	node(long long _sum, int _r ) {
+		sum = _sum; r = _r ;
+	}
+	bool operator < (const node &rhs) const {
+		return sum < rhs.sum;
+	}
+};
+
+priority_queue<node> q;
+
+int main() {
+	freopen("in.txt", "r", stdin);
+	freopen("out.txt", "w", stdout);
+	int t;  scanf("%d", &t); 
+	for (int cas = 1; cas <= t; ++cas){
+		while (!q.empty()) q.pop();
+		cnta = 0, cntb = 0;
+		long long n, k, a, b, c, d, e1, e2, f;
+		scanf("%lld%lld%lld%lld%lld%lld%lld%lld%lld", &n, &k, &a, &b, &c, &d, &e1, &e2, &f);
+		printf("%lld %lld %lld %lld %lld %lld %lld %lld %lld\n", n, k, a, b, c, d, e1, e2, f);
+		continue;
+		A[1] = x[1] = a, B[1] = y[1] = b; int r1 = 0, s1 = 0; suma[1] = a, sumb[1] = b;
+		suma[0] = sumb[0] = 0;
+		for (int i = 2; i <= n; ++i) {
+			int t1 = r1, t2 = s1;
+			r1 = c*t1 + d*t2 + e1;
+			s1 = d*t1 + c*t2 + e2;
+			r1 %= 2, s1 %= 2;
+			x[i] = c*x[i - 1] + d*y[i - 1] + e1;
+			y[i] = d*x[i - 1] + c*y[i - 1] + e2;
+			x[i] %= f, y[i] %= f;
+			A[i] = (r1 == 1 ? -1 : 1) * x[i];
+			B[i] = (s1 == 1 ? -1 : 1) * y[i];
+			suma[i] = suma[i - 1] + A[i];
+			sumb[i] = sumb[i - 1] + B[i];
+		}
+		for (int i = 1; i <= n; ++i)
+			for (int j = 0; j < i; ++j)
+				aa[cnta++] = suma[i] - suma[j];
+		sort(aa, aa + cnta, greater<long long>());
+		for (int i = 1; i <= n; ++i)
+			for (int j = 0; j < i; ++j)
+				bb[cntb++] = sumb[i] - sumb[j];
+		sort(bb, bb + cntb, greater<long long>());
+		int len = cnta;
+		for (int i = 0; i <= len - 1; ++i) {
+			long long fi = aa[i] * bb[0];			//first
+			long long la = aa[i] * bb[len - 1];		//last
+			if (fi >= la) {
+				q.push(node(fi, i));
+				C[i] = 0;
+				Left[i] = true;
+			}
+			else {
+				q.push(node(la, i));
+				C[i] = len - 1;
+				Left[i] = false;
+			}
+		}
+		long long ans = 0; 	
+		for (int i = 1; i <= k; ++i) {
+			node  u = q.top(); q.pop();
+			int c = C[u.r];
+			if(i == k) ans = u.sum;
+			if (Left[u.r]) {
+				if (c + 1 < len) {
+					long long res = aa[u.r] * bb[c + 1];
+					q.push(node(res, u.r));
+					C[u.r]++;
+				}
+			}
+			else {
+				if (c - 1 >= 0) {
+					long long res = aa[u.r] * bb[c - 1];
+					q.push(node(res, u.r));
+					C[u.r]--;
+				}
+			}
+		}
+		printf("Case #%d: %lld\n", cas, ans);
+	}
+	return 0;
+}
+
+/*
+Sample Input
+2 3 1 1 1 1 1 1 5
+1 1 2 2 2 2 2 2 5
+10 1 448 65 903 325 249 681 780
+10 3025 689 839 763 315 156 343 165
+10 10 94 413 187 749 69 770 398
+10 3000 760 621 102 629 993 845 876
+10 1 627 412 429 848 532 176 977
+10 3025 63 959 356 414 770 667 965
+10 10 516 164 234 234 474 21 992
+10 3000 679 212 261 637 848 709 970
+200 1 633 887 3 570 529 349 585
+200 100000 942 613 678 630 188 576 989
+200 50000 443 897 292 860 680 97 987
+200 10 458 891 146 745 826 752 195
+200 99990 479 382 859 26 860 544 987
+200 50000 126 65 0 0 420 23 909
+200 98453 9 679 22 0 971 580 973
+200 99468 159 891 0 172 762 950 1000
+200 50049 560 585 779 0 759 840 976
+200 50092 476 685 0 845 489 97 881
+
+
+Sample Output
+Case #1: 6
+Case #2: 4
+Case #3: 9529544
+Case #4: -1324232
+Case #5: 981396
+Case #6: -1721970
+Case #7: 19829504
+Case #8: -19876389
+Case #9: 590072
+Case #10: -13792428
+Case #11: 3333688
+Case #12: 7518074880
+Case #13: -20746
+Case #14: 385160162
+Case #15: 8338967676
+Case #16: 255360
+Case #17: -67475
+Case #18: 8407150412
+Case #19: 82898585
+Case #20: 5659016
+*/

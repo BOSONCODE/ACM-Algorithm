@@ -1,0 +1,76 @@
+//定义F(x)为长度为x的子串出现的次数
+//ababa  3 2 2 1 1
+#include <bits/stdc++.h>
+using namespace std;
+
+#define maxn 500005
+
+namespace SuffixAutomation {
+    struct sam {
+        int fa, go[26];
+        int len, r;
+        void init() {
+            fa = len = r = 0;
+            memset(go, 0, sizeof go);
+        }
+    }node[maxn];
+    int rt, last, tot;
+    void init() {
+        rt = last = tot = 1;
+        node[0].init();
+        node[1].init();
+    }
+    int newnode() {
+        node[++tot].init();
+        return tot;
+    }
+    void extend(int c) {
+        int p = last, np = newnode();
+        node[np].len = node[p].len + 1; node[np].r = 1;
+        while (p && !node[p].go[c]) node[p].go[c] = np, p = node[p].fa;
+        if (!p) node[np].fa = rt;
+        else {
+            int q = node[p].go[c];
+            if (node[p].len + 1 == node[q].len) node[np].fa = q;
+            else {
+                int nq = newnode(); 
+                node[nq].len = node[p].len + 1;
+                memcpy(node[nq].go, node[q].go, sizeof(node[q].go));
+                node[nq].fa = node[q].fa; node[np].fa = node[q].fa = nq;
+                while (p && node[p].go[c] == q)
+                    node[p].go[c] = nq, p = node[p].fa;
+            }
+        }
+        last = np;
+    }
+}
+using namespace SuffixAutomation;
+
+int v[maxn], q[maxn];
+
+void topsort() {
+    memset(v, 0, sizeof v);
+    for (int i = 1; i <= tot; ++i) ++v[node[i].len];
+    for (int i = 1; i <= tot; ++i) v[i] += v[i - 1];
+    for (int i = tot; i; --i) q[v[node[i].len]--] = i;
+}
+
+char s[maxn];
+int f[maxn];
+
+int main(){
+    while(scanf("%s", s) != EOF){
+        int len = strlen(s); init();
+        memset(f, 0, sizeof f);
+        for (int i = 0; i < len; ++i) extend(s[i] - 'a');   
+        topsort();
+        for (int i = tot; i >= 1; --i){
+            int u = q[i]; 
+            f[node[u].len] = max(f[node[u].len], node[u].r);
+            if(node[u].fa) node[node[u].fa].r += node[u].r;
+        }
+        for (int i = len - 1; i >= 1; --i) f[i] = max(f[i + 1], f[i]);
+        for (int i = 1; i <= len; ++i) printf("%d\n", f[i]);
+    }
+    return 0;
+}

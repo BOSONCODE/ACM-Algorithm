@@ -1,0 +1,14 @@
+struct Hash{
+	long long B, mod, len, h[maxn], pw[maxn];
+	void init(char *s, int _len, long long _b, long long _mod){
+		B = _b; len = _len; mod = _mod; pw[0] = 1; h[0] = 0;
+		for (int i = 1; i <= len; ++i){
+			pw[i] = 1LL*pw[i-1]*B%mod;
+			h[i] = (1LL*h[i-1]*B+s[i]-'a' + 1)%mod;
+		}
+	}
+	long long gethash(int l, int r){
+		long long res = (h[r] - 1LL*h[l-1]*pw[r-l+1])%mod;
+		return (res < 0 ? res += mod : res);
+	}
+}hash1, hash2;

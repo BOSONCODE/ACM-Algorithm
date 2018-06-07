@@ -1,0 +1,110 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define maxn 1005
+
+struct Edge{
+    int v, nxt;
+    int w, flag;
+}e[1500000];
+int head[maxn], tot;
+int n, m1, m2, L;
+int a, b, c;
+int vis[maxn][321];
+int dist[maxn][321];
+
+void init(){
+    memset(head, -1, sizeof head);
+    tot = 0;
+}
+void addedge(int u, int v, int c, int flag){
+    e[tot].nxt = head[u];
+    e[tot].v = v;
+    e[tot].flag = flag;
+    e[tot].w = c;
+    head[u] = tot++;
+}
+const int INF = 1e9 + 5;
+
+struct node{
+    int dis, pos;
+    int len;
+    node(){}
+    node(int a, int b, int c):dis(a), pos(b), len(c){}
+    bool operator < (const node &rhs) const{
+        return dis > rhs.dis;
+    }
+};
+
+void Dijstra(int s){
+    memset(vis, 0, sizeof vis);
+    for (register int i = 1; i <= n; ++i)
+        for (register int j = 0; j <= 320; ++j)
+            dist[i][j] = INF;
+    dist[s][0] = 0;
+    priority_queue<node>q; 
+    q.push(node(0, s, 0));
+    /*while(!q.empty()){
+        node tmp = q.top(); q.pop();
+        int u = tmp.pos, len = tmp.len;
+        if(vis[u][len]) continue; 
+        vis[u][len] = 1;
+        for (register int i = head[u]; ~i; i = e[i].nxt){
+            int v = e[i].v, c = e[i].w, flag = e[i].flag;
+            if(dist[v][len + flag] > dist[u][len] + c){
+                dist[v][len + flag] = dist[u][len] + c;
+                q.push(node(dist[v][len + flag], v, len + flag));
+            }
+        }
+    }*/
+   while(!q.empty()){
+        node tmp = q.top(); q.pop();
+        int u = tmp.pos, len = tmp.len;
+       // if(dist[u][len] < tmp.dis) continue;
+       if(vis[u][len]) continue;
+       vis[u][len] = 1;
+        for (register int i = head[u]; ~i; i = e[i].nxt){
+            int v = e[i].v, c = e[i].w, flag = e[i].flag;
+            if(flag) continue;
+            if(dist[v][len + flag] > dist[u][len] + c){
+                dist[v][len + flag] = dist[u][len] + c;
+                q.push(node(dist[v][len + flag], v, len + flag));
+            }
+        }
+        if(len == m1) continue;
+        for (register int i = head[u]; ~i; i = e[i].nxt){
+            int v = e[i].v, c = e[i].w, flag = e[i].flag;
+            if(!flag) continue;
+            if(dist[v][len + flag] > dist[u][len] + c){
+                dist[v][len + flag] = dist[u][len] + c;
+                q.push(node(dist[v][len + flag], v, len + flag));
+            }
+        }
+    }
+}
+
+
+void run(){
+    init();
+    scanf("%d%d%d%d", &n, &m1, &m2, &L);
+    for (register int i = 1; i <= m1; ++i){
+        scanf("%d%d", &a, &b);
+        addedge(a, b, 1, 1);
+        addedge(b, a, 1, 1);
+    }
+    for (register int i = 1; i <= m2; ++i){
+        scanf("%d%d%d", &a, &b, &c);
+        addedge(a, b, c, 0);
+        addedge(b, a, c, 0);
+    }
+    Dijstra(1);
+    int ans = INF;
+    for (int i = 0; i <= 320; ++i)if(dist[n][i] <= L)
+            ans = min(ans, dist[n][i] - i);
+    printf("%d\n", ans >= INF ? -1 : ans);
+}
+
+int main(){
+    int t; scanf("%d", &t);
+    while(t-->0) run();
+    return 0;
+}

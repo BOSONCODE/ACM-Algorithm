@@ -1,0 +1,29 @@
+struct hashmap  
+{  
+    unsigned long long int a[maxn];  
+    int head[hashh];  
+    int next[maxn];  
+    int size;  
+    void init()  
+    {  
+        memset(head,-1,sizeof(head));  
+        size=0;  
+    }  
+    bool find(unsigned long long int val)  
+    {  
+        int tmp=(val%hashh+hashh)%hashh;  
+        for(int i=head[tmp];i!=-1;i=next[i])  
+        {  
+            if(val==a[i])return true;  
+        }  
+        return false;  
+    }  
+    void add(unsigned long long int val)  
+    {  
+        int tmp=(val%hashh+hashh)%hashh;  
+        if(find(val))return ;  
+        a[size]=val;  
+        next[size]=head[tmp];//¡Ónext÷∏œÚ-1°¢  
+        head[tmp]=size++;  
+    }  
+}H;

@@ -1,0 +1,26 @@
+const int maxn=1e6+5;
+char s[maxn*2],str[maxn*2];
+int Len[maxn*2],len;
+
+void getstr(){
+    int k=0; str[k++]='$';
+    for(int i=0;i<len;i++) str[k++]='#',str[k++]=s[i]; str[k++]='#'; len=k;
+}
+void Manacher(){
+    getstr();int mx=0,id;
+    for(int i=1;i<len;i++){
+        if(mx>i) Len[i]=min(Len[2*id-i],mx-i);
+        else Len[i]=1;
+        while(str[i+Len[i]]==str[i-Len[i]]) Len[i]++;
+        if(Len[i]+i>mx) mx=Len[i]+i,id=i;
+    }
+}
+int main(){
+    int n; scanf("%d",&n);
+    for(int i=1;i<=n;i++){
+        scanf("%s",&s);len=strlen(s);Manacher();
+        int ans=1; for(int i=1;i<len;i++) ans=max(ans,Len[i]);
+        printf("%d\n",ans-1);
+    }
+    return 0;
+}

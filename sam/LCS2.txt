@@ -1,0 +1,97 @@
+//¶à´®µÄlcs
+#include <bits/stdc++.h>
+using namespace std;
+
+#define maxn 2000005
+
+namespace SuffixAutomation {
+    struct sam {
+        int fa, go[26];
+        int len, r, mx, mn;
+        void init() {
+            fa = len = r = 0;
+            mx = mn = 0;
+            memset(go, 0, sizeof go);
+        }
+    }node[maxn];
+    int rt, last, tot;
+    void init() {
+        rt = last = tot = 1;
+        node[0].init();
+        node[1].init();
+    }
+    int newnode() {
+        node[++tot].init();
+        return tot;
+    }
+    void extend(int c) {
+        int p = last, np = newnode();
+        node[np].len = node[p].len + 1; node[np].r = 1;
+        while (p && !node[p].go[c]) node[p].go[c] = np, p = node[p].fa;
+        if (!p) node[np].fa = rt;
+        else {
+            int q = node[p].go[c];
+            if (node[p].len + 1 == node[q].len) node[np].fa = q;
+            else {
+                int nq = newnode(); 
+                node[nq].len = node[p].len + 1;
+                memcpy(node[nq].go, node[q].go, sizeof(node[q].go));
+                node[nq].fa = node[q].fa; node[np].fa = node[q].fa = nq;
+                while (p && node[p].go[c] == q)
+                    node[p].go[c] = nq, p = node[p].fa;
+            }
+        }
+        last = np;
+    }
+}
+using namespace SuffixAutomation;
+
+int v[maxn], q[maxn];
+
+void topsort() {
+    memset(v, 0, sizeof v);
+    for (int i = 1; i <= tot; ++i) ++v[node[i].len];
+    for (int i = 1; i <= tot; ++i) v[i] += v[i - 1];
+    for (int i = tot; i; --i) q[v[node[i].len]--] = i;
+    for (int i = 1; i <= tot; ++i) node[i].mn = node[i].len;
+}
+
+char x[maxn], y[maxn];
+
+void walk(char s[], int len){
+    int cnt = 0, p = rt;
+    for (int i = 0; i < len; ++i){
+        int id = s[i] - 'a';
+        if(node[p].go[id]) p = node[p].go[id], node[p].mx = max(node[p].mx, ++cnt);
+        else{
+            while(p && !node[p].go[id]) p = node[p].fa;
+            if(!p) p = rt, cnt = 0;
+            else{
+                cnt = node[p].len + 1;
+                p = node[p].go[id];
+                node[p].mx = max(node[p].mx, cnt);
+            }
+        }
+    }
+}
+
+int main(){
+    init();
+    scanf("%s", x); int len = strlen(x);
+    for (int i = 0; i < len; ++i) extend(x[i] - 'a');
+    topsort();
+    int ans = 0;
+    while(scanf("%s", y) != EOF && y[0] != '#'){
+        int leny = strlen(y);
+        walk(y, leny);
+        for(int i = tot; i; --i){
+            int u = q[i];
+            node[node[u].fa].mx= max(node[node[u].fa].mx, node[u].mx);
+            node[u].mn = min(node[u].mn, node[u].mx);
+            node[u].mx=0;
+        }
+    }
+    for (int i = 1; i <= tot; ++i) ans = max(ans, node[i].mn);
+    printf("%d\n", ans);
+    return 0;
+}

@@ -1,0 +1,168 @@
+#include"bits/stdc++.h"
+
+using namespace std;
+typedef long long LL;
+
+const int Mod=1000003,m1=998244353,m2=1004535809,pwMod=Mod-1;
+const LL P=1002772198720536577LL;
+
+inline int CRT(int r1,int r2){
+	return (((r1-r2)*334845110LL%m2*m1+r1)%P+P)%P%Mod;
+}
+
+int power(int a,int t,int P){
+	int r=1;
+	while(t){
+		if(t&1)r=(LL)r*a%P;
+		a=(LL)a*a%P;t>>=1;
+	}
+	return r;
+}
+
+int _wn[25];
+
+void NTT(int*A,int len,int dft,int P){
+	int i,j=len>>1,k,l,w,wn,c=0,u,v;
+	for(i=1;i<len-1;i++){
+		if(i<j)swap(A[i],A[j]);
+		for(k=len>>1;(j^=k)<k;k>>=1);
+	}
+	for(i=0;i<=21;i++)_wn[i]=power(3,P-1>>i,P);
+	for(l=2;l<=len;l<<=1){
+		i=l>>1,wn=_wn[++c];
+		for(j=0;j<len;j+=l){
+			w=1;
+			for(k=j;k<j+i;k++){
+				u=A[k],v=(LL)A[k+i]*w%P;
+				A[k]=(u+v)%P,A[k+i]=(u-v+P)%P;
+				w=(LL)w*wn%P;
+			}
+		}
+	}
+	if(dft==-1){
+		int inv_len=power(len,P-2,P);
+		for(int i=0;i<len;i++)A[i]=(LL)A[i]*inv_len%P;
+		for(int i=1;i<len/2;i++)swap(A[i],A[len-i]);
+	}
+}
+
+const int N=100005,M=524300;
+
+int n,b,c,d,a[N],fac[N],ifac[N],w1[M],w2[M],w3[M],w4[M],p[M],x[M],y[M],z[M],L;
+
+void convol(int*A,int*B,int*R,int len){
+	memcpy(w1,A,len<<2);
+	memcpy(w2,B,len<<2);
+	NTT(w1,len,1,m1);
+	NTT(w2,len,1,m1);
+	for(int i=0;i<len;i++)w3[i]=(LL)w1[i]*w2[i]%m1;
+	NTT(w3,len,-1,m1);
+	memcpy(w1,A,len<<2);
+	memcpy(w2,B,len<<2);
+	NTT(w1,len,1,m2);
+	NTT(w2,len,1,m2);
+	for(int i=0;i<len;i++)w4[i]=(LL)w1[i]*w2[i]%m2;
+	NTT(w4,len,-1,m2);
+	for(int i=0;i<len;i++)R[i]=CRT(w3[i],w4[i]);
+}
+
+int main(){
+	scanf("%d%d%d%d",&n,&b,&c,&d);
+	for(int i=0;i<n;i++)scanf("%d",&a[i]);
+	fac[0]=1;
+	for(int i=1;i<=n;i++)fac[i]=(LL)fac[i-1]*i%Mod;
+	ifac[n]=power(fac[n],Mod-2,Mod);
+	for(int i=n;i>=1;i--)ifac[i-1]=(LL)ifac[i]*i%Mod;
+	for(L=1;L<=n*2;L<<=1);
+	memset(x,0,L<<2);
+	memset(y,0,L<<2);
+	for(int i=0;i<n;i++){
+		x[n-i]=(LL)power(d,i,Mod)*fac[i]*a[i]%Mod;
+		y[i]=ifac[i];
+	}
+	convol(x,y,z,L);
+	for(int i=0;i<n;i++)p[i]=z[n-i];
+	L<<=1;
+	memset(x,0,L<<2);
+	memset(y,0,L<<2);
+	int w=(LL)b*power(d,Mod-2,Mod)%Mod;
+	for(int i=0;i<n;i++)x[i]=(LL)ifac[i]*power(w,i,Mod)*p[i]%Mod*power(c,(LL)i*i%pwMod,Mod)%Mod;
+	for(int i=0;i<2*n;i++)y[i]=power(c,(-(LL)(i-n)*(i-n)%pwMod+pwMod)%pwMod,Mod);
+	convol(x,y,z,L);
+	for(int i=0;i<n;i++)printf("%d\n",(LL)power(c,(LL)i*i%pwMod,Mod)*z[i+n]%Mod);
+	return 0;
+}
+
+求解原根（输入为一个素数）
+using namespace std;
+#define maxn 100005
+#define LL long long
+#define INF 1000000000000000000
+
+const int N = 1000010;
+
+bitset<N> prime;
+int p[N], pri[N];
+int k, cnt;
+
+void isprime(){
+	prime.set();
+	for (int i = 2; i<N; i++){
+		if (prime[i]){
+			p[k++] = i;
+			for (int j = i + i; j<N; j += i)
+				prime[j] = false;
+		}
+	}
+}
+
+void Divide(int n){
+	cnt = 0;
+	int t = (int)sqrt(1.0*n);
+	for (int i = 0; p[i] <= t; i++){
+		if (n%p[i] == 0){
+			pri[cnt++] = p[i];
+			while (n%p[i] == 0) n /= p[i];
+		}
+	}
+	if (n > 1) pri[cnt++] = n;
+}
+
+LL quick_mod(LL a, LL b, LL m){
+	LL ans = 1;
+	a %= m;
+	while (b){
+		if (b & 1){
+			ans = ans * a % m;
+			b--;
+		}
+		b >>= 1;
+		a = a * a % m;
+	}
+	return ans;
+}
+
+int main(){
+	int P;
+	isprime();
+	while (cin >> P){
+		Divide(P - 1);
+		for (int g = 2; g<P; g++){
+			bool flag = true;
+			for (int i = 0; i<cnt; i++){
+				int t = (P - 1) / pri[i];
+				if (quick_mod(g, t, P) == 1){
+					flag = false;
+					break;
+				}
+			}
+			if (flag){
+				int root = g;
+				cout << root << endl;
+				break;
+			}
+		}
+	}
+	return 0;
+}
+

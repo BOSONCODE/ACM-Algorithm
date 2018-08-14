@@ -1,0 +1,148 @@
+//by BOSON_Z
+#include <iostream>
+#include <string>
+#include <string.h>
+#include <algorithm>
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#include <set>
+#include <iomanip>
+#include <map>
+#include <vector>
+//#include <bits/stdc++.h>
+
+using namespace std;
+
+const int INF = 1e9;
+const int maxn = 1e5 + 5;
+int b[maxn];
+
+int c[maxn];
+struct FenwickTree {
+	int n;
+	void init(int _n) {
+		n = _n;
+		for (int i = 0; i <= n + 1; ++i)
+			c[i] = 0;
+	}
+	int lowbit(int x) { return x&(-x); }
+	void add(int id, int v) {
+		while (id <= n) {
+			c[id] += v;
+			id += lowbit(id);
+		}
+	}
+	int sum(int id) {
+		int res = 0;
+		while (id > 0) {
+			res += c[id];
+			id -= lowbit(id);
+		}
+		return res;
+	}
+	int query2(int l, int r) {
+		return sum(r) - sum(l - 1);
+	}
+}bit;
+
+struct Node {
+	int l, r;
+	pair<int, int> maxVal;
+	int lazy;
+}tree[maxn << 2];
+
+void pushup(int rt) {
+	tree[rt].maxVal = tree[rt << 1].maxVal;
+	if (tree[rt].maxVal.first < tree[rt << 1 | 1].maxVal.first) {
+		tree[rt].maxVal = tree[rt << 1 | 1].maxVal;
+	}
+}
+
+void pushdown(int rt) {
+	if (tree[rt].lazy) {
+		tree[rt << 1].lazy += tree[rt].lazy;
+		tree[rt << 1 | 1].lazy += tree[rt].lazy;
+		tree[rt << 1].maxVal.first += tree[rt].lazy;
+		tree[rt << 1 | 1].maxVal.first += tree[rt].lazy;
+		tree[rt].lazy = 0;
+	}
+}
+
+void build(int rt, int l, int r) {
+	tree[rt].l = l, tree[rt].r = r;
+	tree[rt].maxVal = make_pair(-INF, -1);
+	tree[rt].lazy = 0;
+	if (l == r) {
+		tree[rt].maxVal = make_pair(-b[l], l);
+		return;
+	}
+	int mid = (l + r) >> 1;
+	build(rt << 1, l, mid);
+	build(rt << 1 | 1, mid + 1, r);
+	pushup(rt);
+}
+
+void update(int rt, int l, int r, int v) {
+	int L = tree[rt].l, R = tree[rt].r;
+	if (l <= L && R <= r) {
+		tree[rt].maxVal.first += v;
+		tree[rt].lazy += v;
+		return;
+	}
+	pushdown(rt);
+	int mid = (L + R) >> 1;
+	if (l <= mid) update(rt << 1, l, r, v);
+	if (mid < r) update(rt << 1 | 1, l, r, v);
+	pushup(rt);
+}
+
+pair<int, int>query(int rt, int l, int r) {
+	int L = tree[rt].l, R = tree[rt].r;
+	if (l <= L && R <= r) { return tree[rt].maxVal; }
+	pushdown(rt);
+	int mid = (L + R) >> 1;
+	pair<int, int>ans = make_pair(-INF, -1);
+	if (l <= mid) {
+		pair<int, int> res = query(rt << 1, l, r);
+		if (res.first > ans.first)
+			ans = res;
+	}
+	if (mid < r) {
+		pair<int, int> res = query(rt << 1 | 1, l, r);
+		if (res.first > ans.first)
+			ans = res;
+	}
+	return ans;
+}
+
+int main() {
+	int n, qq;
+	while (scanf("%d%d", &n, &qq) == 2) {
+		bit.init(n);
+		for (int i = 1; i <= n; ++i)
+			scanf("%d", b + i);
+		build(1, 1, n);
+		while (qq-- > 0) {
+			char op[10]; scanf("%s", op);
+			int l, r; scanf("%d%d", &l, &r);
+			if (op[0] == 'a') {
+				update(1, l, r, 1);
+			}
+			else {
+				while (1) {
+					pair<int, int>res = query(1, l, r);
+					if (res.first >= 0) {
+						bit.add(res.second, res.first / b[res.second] + 1);
+						int tmp = res.first / b[res.second] + 2;
+						update(1, res.second, res.second, (res.first - tmp*b[res.second]));
+					}
+					else break; 
+				}
+				int ans = bit.query2(l, r);
+				printf("%d\n", ans);
+			}
+		}
+	}
+	return 0;
+}
